@@ -8,7 +8,7 @@ let _lastFrameTime;
 let _hasInited = false;
 
 // The render loop. This is where all the magic happens.
-const loop = (time) => {
+const loop = async (time) => {
   if (!_lastFrameTime) {
     _lastFrameTime = time;
   }
@@ -28,7 +28,10 @@ const loop = (time) => {
     if (window.init) {
       _hasInited = true;
       
-      window.init(_canvas);
+      const v = window.init(_canvas);
+      if (v instanceof Promise) {
+        await v;
+      }
     }
   }
 

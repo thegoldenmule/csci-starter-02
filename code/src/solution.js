@@ -20,17 +20,11 @@ window.init = async (canvas) => {
 
   programs.default = await loadShader(gl);
 
-  const octohedron = create(gl, {
-    ...geo.octohedron(),
+  const sun = create(gl, {
+    ...geo.sphere(2),
     program: programs.default,
   });
-  octohedron.update = (dt) => {
-    const speed = 0.1;
-    const angle = speed * dt * (Math.PI / 180);
-    mat4.rotateX(octohedron.transform, octohedron.transform, angle);
-    mat4.rotateY(octohedron.transform, octohedron.transform, angle);
-  };
-  shapes.push(octohedron);
+  shapes.push(sun);
 };
 
 window.loop = (dt, canvas) => {

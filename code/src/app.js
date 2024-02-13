@@ -44,12 +44,8 @@ const loop = async (time) => {
 };
 
 // Adds a script tag to the DOM with our solution.
-const attachScript = () => {
-  const url = `./src/solution.js`;
-  const scriptTag = document.createElement('script');
-  scriptTag.src = url;
-  document.head.appendChild(scriptTag);
-  document.title = `Assignment Solution`;
+const attachScript = async () => {
+  await import('./solution.js');
 };
 
 window.loadShader = async ({ gl, name, type }) => {

@@ -1,116 +1,13 @@
+import geo from './geo.js';
+import { loadShader } from './shaders.js';
+
 /** @type {WebGLRenderingContext} */
 let gl;
 
 const mat4 = glMatrix.mat4;
-const clearColor = { r:Math.random(), g:Math.random(), b:Math.random() };
+const clearColor = { r: 0.5 * Math.random(), g:Math.random(), b:Math.random() };
 const programs = {};
 const shapes = [];
-
-let AttributeDefinitions;
-
-const loadShader = async ({ v = 'vertex', f = 'fragment' } = {}) => {
-  // load vertex and fragment shaders + create program
-  const vertex = await window.loadShader({ gl, name: v, type: gl.VERTEX_SHADER });
-  const fragment = await window.loadShader({ gl, name: f, type: gl.FRAGMENT_SHADER });
-  
-  const program = gl.createProgram();
-  gl.attachShader(program, vertex);
-  gl.attachShader(program, fragment);
-  gl.linkProgram(program);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    console.error(`Could not init shaders: ${gl.getProgramInfoLog(program)}`);
-    return;
-  }
-
-  program.attributes = {
-    position: gl.getAttribLocation(program, AttributeDefinitions.POSITION.name),
-    uv: gl.getAttribLocation(program, AttributeDefinitions.UV.name),
-  };
-
-  program.uniforms = {};
-  program.uniforms.P = gl.getUniformLocation(program, "uProjectionMatrix");
-  program.uniforms.MV = gl.getUniformLocation(program, "uModelViewMatrix");
-  program.uniforms.Color = gl.getUniformLocation(program, "uColor");
-
-  return program;
-};
-
-const initAttributeDefinitions = (gl) => {
-  AttributeDefinitions = {
-    POSITION: {
-      key: 'position',
-      name: 'aVertexPosition',
-      size: 3,
-      type: gl.FLOAT,
-      normalize: false,
-      stride: 0,
-      offset: 0,
-    },
-    UV: {
-      key: 'uv',
-      name: 'aTextureCoord',
-      size: 2,
-      type: gl.FLOAT,
-      normalize: false,
-      stride: 0,
-      offset: 0,
-    }
-  };
-};
-
-const geo = {
-  quad: () => {
-    return {
-      vertices: [
-        1, 0, 1,
-        -1, 0, 1,
-        -1, 0, -1,
-        1, 0, -1,
-      ],
-      uvs: [
-        1, 1,
-        0, 1,
-        0, 0,
-        1, 0,
-      ],
-      indices: [
-        0, 1, 2,
-        0, 2, 3,
-      ],
-    };
-  },
-
-  octohedron: () => {
-    return {
-      vertices: [
-        1, 0, 0,
-        -1, 0, 0,
-        0, 1, 0,
-        0, -1, 0,
-        0, 0, 1,
-        0, 0, -1,
-      ],
-      uvs: [
-        0, 0,
-        1, 0,
-        0, 1,
-        1, 1,
-        0, 0,
-        1, 0,
-      ],
-      indices: [
-        4, 0, 2,
-        4, 2, 1,
-        4, 1, 3,
-        4, 3, 0,
-        5, 2, 0,
-        5, 1, 2,
-        5, 3, 1,
-        5, 0, 3,
-      ],
-    };
-  },
-};
 
 const generatePrimitive = ({ vertices, indices, uvs, transform, }) => {
   const vbo = gl.createBuffer();
@@ -152,18 +49,16 @@ const generatePrimitive = ({ vertices, indices, uvs, transform, }) => {
 
       // attributes
       {
-        const { size, type, normalized, stride, offset } = AttributeDefinitions.POSITION;
         const pointer = program.attributes.position;
         gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-        gl.vertexAttribPointer(pointer, size, type, normalized, stride, offset);
+        gl.vertexAttribPointer(pointer, 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(pointer);
 
         if (uvbo) {
           const pointer = program.attributes.uv;
           if (pointer !== -1) {
-            const { size, type, normalized, stride, offset } = AttributeDefinitions.UV;
             gl.bindBuffer(gl.ARRAY_BUFFER, uvbo);
-            gl.vertexAttribPointer(pointer, size, type, normalized, stride, offset);
+            gl.vertexAttribPointer(pointer, 2, gl.FLOAT, false, 0, 0);
             gl.enableVertexAttribArray(pointer);
           }
         }
@@ -188,12 +83,7 @@ window.init = async (canvas) => {
   gl.enable(gl.DEPTH_TEST);
   gl.depthFunc(gl.LEQUAL);
 
-  initAttributeDefinitions(gl);
-
-  programs.default = await loadShader();
-
-  const ground = generatePrimitive(geo.quad());
-  //shapes.push(ground);
+  programs.default = await loadShader(gl);
 
   const octohedron = generatePrimitive(geo.octohedron());
   octohedron.update = (dt) => {

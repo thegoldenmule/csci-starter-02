@@ -1,6 +1,6 @@
-const { mat4 } = glMatrix;
+const { mat4, vec3, quat } = glMatrix;
 
-export const create = (gl, { program, vertices, indices, uvs, transform, }) => {
+export const create = (gl, { program, vertices, indices, uvs, }) => {
   const vbo = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
   gl.bufferData(
@@ -28,13 +28,22 @@ export const create = (gl, { program, vertices, indices, uvs, transform, }) => {
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
   }
 
+  const M = mat4.create();
+  const rotation = quat.create();
   const MV = mat4.create();
 
   const node = {
     program,
-    transform: transform || mat4.identity(mat4.create()),
+    transform: M,
+    position: vec3.create(),
+    scale: 1,
     draw: ({ program, V }) => {
-      const M = node.transform;
+      mat4.fromRotationTranslationScale(M,
+        rotation,
+        node.position,
+        vec3.fromValues(node.scale, node.scale, node.scale),
+      );
+
       mat4.multiply(MV, V, M);
       gl.uniformMatrix4fv(program.uniforms.MV, false, MV);
 

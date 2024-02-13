@@ -5,7 +5,7 @@ import { loadShader } from './shaders.js';
 /** @type {WebGLRenderingContext} */
 let gl;
 
-const mat4 = glMatrix.mat4;
+const { mat4, vec3 } = glMatrix;
 const clearColor = { r: 0.5 * Math.random(), g:Math.random(), b:Math.random() };
 const programs = {};
 const shapes = [];
@@ -25,6 +25,14 @@ window.init = async (canvas) => {
     program: programs.default,
   });
   shapes.push(sun);
+
+  const mercury = create(gl, {
+    ...geo.sphere(2),
+    program: programs.default,
+  });
+  mercury.position = vec3.fromValues(1.25, 0, 0);
+  mercury.scale = 0.1;
+  shapes.push(mercury);
 };
 
 window.loop = (dt, canvas) => {

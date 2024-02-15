@@ -47,7 +47,7 @@ window.init = async (canvas) => {
     vertices, indices, colors,
   });
   sun.acc = 0;
-  scene.push(sun);
+  //scene.push(sun);
 
   sun.update = (dt) => {
     const speed = 0.03;
@@ -57,6 +57,28 @@ window.init = async (canvas) => {
     sun.rotation = quat.fromEuler(
       sun.rotation,
       0, angle, 0);
+  };
+
+  const cubeGeo = geo.cube();
+  const cube = create(
+    gl,
+    {
+      program: programs.default,
+      ...cubeGeo,
+    },
+  );
+  cube.acc = 0;
+  cube.scale = vec3.fromValues(0.5, 0.5, 0.5);
+  scene.push(cube);
+
+  cube.update = (dt) => {
+    const speed = 0.03;
+    cube.acc += dt * speed;
+
+    const angle = cube.acc % 360;
+    cube.rotation = quat.fromEuler(
+      cube.rotation,
+      15, angle, 0);
   };
 };
 

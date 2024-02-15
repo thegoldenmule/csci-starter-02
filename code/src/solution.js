@@ -25,21 +25,21 @@ window.init = async (canvas) => {
 
   // shaders
   programs.default = await loadShader(gl, {
-    attributes: ['aVertexHeight'],
+    //
   });
 
+  const { vertices, indices, } = geo.quad();
+  const quadNode = create(gl, {
+    program: programs.default,
+    rotation: quat.fromEuler(quat.create(), 90, 0, 0),
+    vertices, indices,
+  });
+  scene.push(quadNode);
+
   // solar system
+  /*
   const { vertices, indices } = geo.sphere();
   const colors = new Float32Array(vertices.length);
-  for (let i = 0; i < colors.length; i += 3) {
-    const [vx, vy, vz] = vertices.slice(i, i + 3);
-    const r = vx * 0.5 + 0.5;
-    const g = vy * 0.5 + 0.5;
-    const b = vz * 0.5 + 0.5;
-    colors[i] = r;
-    colors[i + 1] = g;
-    colors[i + 2] = b;
-  }
 
   const sun = create(gl, {
     program: programs.default,
@@ -59,7 +59,7 @@ window.init = async (canvas) => {
       0, angle, 0);
   };
 
-  const cubeGeo = geo.cubeComplex();
+  const cubeGeo = geo.cube();
   const cube = create(
     gl,
     {
@@ -69,7 +69,7 @@ window.init = async (canvas) => {
   );
   cube.acc = 0;
   cube.scale = vec3.fromValues(0.5, 0.5, 0.5);
-  scene.push(cube);
+  //scene.push(cube);
 
   cube.update = (dt) => {
     const speed = 0.03;
@@ -79,7 +79,7 @@ window.init = async (canvas) => {
     cube.rotation = quat.fromEuler(
       cube.rotation,
       15, angle, 0);
-  };
+  };*/
 };
 
 window.loop = (dt, canvas) => {

@@ -59,7 +59,7 @@ window.init = async (canvas) => {
       0, angle, 0);
   };
 
-  const cubeGeo = geo.cube();
+  const cubeGeo = geo.cubeComplex();
   const cube = create(
     gl,
     {

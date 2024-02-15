@@ -2,6 +2,7 @@ const { vec3, quat, mat4 } = glMatrix;
 
 export const create = (gl, {
   name = "node", program, plugins = {},
+  scale = vec3.fromValues(1, 1, 1),
   indices, vertices, uvs, colors,
 }) => {
   const M = mat4.create();
@@ -56,7 +57,7 @@ export const create = (gl, {
     name, program,
     position: vec3.create(),
     rotation: quat.create(),
-    scale: vec3.fromValues(1, 1, 1),
+    scale: scale,
     transform: M,
     children: [],
     draw: (params) => {

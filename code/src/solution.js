@@ -47,7 +47,7 @@ window.init = async (canvas) => {
     vertices, indices, colors,
   });
   sun.acc = 0;
-  //scene.push(sun);
+  scene.push(sun);
 
   sun.update = (dt) => {
     const speed = 0.03;
@@ -58,60 +58,6 @@ window.init = async (canvas) => {
       sun.rotation,
       0, angle, 0);
   };
-
-  const width = 10, height = 10;
-  const groundGeo = geo.grid({ width, height });
-  const groundColors = new Float32Array(groundGeo.vertices.length);
-  for (let i = 0; i < groundColors.length; i += 3) {
-    const [vx, vy, vz] = groundGeo.vertices.slice(i, i + 3);
-    const r = 0.5 + vx * 0.5;
-    const g = 0.5 + vy * 0.5;
-    const b = 0.5 + vz * 0.5;
-    groundColors[i] = r;
-    groundColors[i + 1] = g;
-    groundColors[i + 2] = b;
-  }
-
-  noise.seed(300);
-  const groundHeight = new Array(groundGeo.vertices.length / 3);
-  for (let x = 0; x < width; x++) {
-    for (let y = 0; y < height; y++) {
-      const i = x * height + y;
-      groundHeight[i] = 10 * noise.perlin2(x / 100, y / 100);
-    }
-  }
-
-  const program = programs.default;
-  const pointer = program.attributes.aVertexHeight;
-
-  let hbo;
-  if (pointer !== -1) {
-    hbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, hbo);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(groundHeight), gl.STATIC_DRAW);
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-  }
-
-  const ground = create(gl, {
-    program: programs.default,
-    name: 'ground',
-    ...groundGeo,
-    colors: groundColors,
-    plugins: {
-      draw: [
-        () => {
-          if (hbo === undefined) {
-            return;
-          }
-
-          gl.bindBuffer(gl.ARRAY_BUFFER, hbo);
-          gl.vertexAttribPointer(pointer, 1, gl.FLOAT, false, 0, 0);
-          gl.enableVertexAttribArray(pointer);
-        },
-      ],
-    },
-  });
-  scene.push(ground);
 };
 
 window.loop = (dt, canvas) => {

@@ -24,45 +24,30 @@ window.init = async (canvas) => {
   gl.depthFunc(gl.LEQUAL);
 
   // shaders
-  programs.default = await loadShader(gl);
+  programs.default = await loadShader(gl, {
+    attributes: ['aVertexHeight'],
+  });
 
   // solar system
+  const { vertices, indices } = geo.sphere();
+  const colors = new Float32Array(vertices.length);
+  for (let i = 0; i < colors.length; i += 3) {
+    const [vx, vy, vz] = vertices.slice(i, i + 3);
+    const r = vx * 0.5 + 0.5;
+    const g = vy * 0.5 + 0.5;
+    const b = vz * 0.5 + 0.5;
+    colors[i] = r;
+    colors[i + 1] = g;
+    colors[i + 2] = b;
+  }
+
   const sun = create(gl, {
     program: programs.default,
     name: 'sun',
-    ...geo.sphere(),
+    vertices, indices, colors,
   });
   sun.acc = 0;
-  scene.push(sun);
-
-  const jupiter = create(gl, {
-    program: programs.default,
-    name: 'jupiter',
-    ...geo.sphere(),
-  });
-  jupiter.position = vec3.fromValues(1.75, 0, 0);
-  jupiter.scale = vec3.fromValues(0.5, 0.5, 0.5);
-  jupiter.acc = 0;
-  sun.children.push(jupiter);
-
-  const europa = create(gl, {
-    program: programs.default,
-    name: 'europa',
-    ...geo.sphere(),
-  });
-  europa.position = vec3.fromValues(1.8, 0, 0);
-  europa.scale = vec3.fromValues(0.5, 0.5, 0.5);
-  europa.acc = 0;
-  jupiter.children.push(europa);
-
-  const pluto = create(gl, {
-    program: programs.default,
-    name: 'pluto',
-    ...geo.sphere(),
-  });
-  pluto.position = vec3.fromValues(1.8, 0, 0);
-  pluto.scale = vec3.fromValues(0.5, 0.5, 0.5);
-  europa.children.push(pluto);
+  //scene.push(sun);
 
   sun.update = (dt) => {
     const speed = 0.03;
@@ -74,25 +59,59 @@ window.init = async (canvas) => {
       0, angle, 0);
   };
 
-  jupiter.update = (dt) => {
-    const speed = 0.1;
-    jupiter.acc += dt * speed;
+  const width = 10, height = 10;
+  const groundGeo = geo.grid({ width, height });
+  const groundColors = new Float32Array(groundGeo.vertices.length);
+  for (let i = 0; i < groundColors.length; i += 3) {
+    const [vx, vy, vz] = groundGeo.vertices.slice(i, i + 3);
+    const r = 0.5 + vx * 0.5;
+    const g = 0.5 + vy * 0.5;
+    const b = 0.5 + vz * 0.5;
+    groundColors[i] = r;
+    groundColors[i + 1] = g;
+    groundColors[i + 2] = b;
+  }
 
-    const angle = jupiter.acc % 360;
-    jupiter.rotation = quat.fromEuler(
-      jupiter.rotation,
-      0, angle, 0);
-  };
+  noise.seed(300);
+  const groundHeight = new Array(groundGeo.vertices.length / 3);
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) {
+      const i = x * height + y;
+      groundHeight[i] = 10 * noise.perlin2(x / 100, y / 100);
+    }
+  }
 
-  europa.update = (dt) => {
-    const speed = 0.5;
-    europa.acc += dt * speed;
+  const program = programs.default;
+  const pointer = program.attributes.aVertexHeight;
 
-    const angle = europa.acc % 360;
-    europa.rotation = quat.fromEuler(
-      europa.rotation,
-      0, angle, 0);
-  };
+  let hbo;
+  if (pointer !== -1) {
+    hbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, hbo);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(groundHeight), gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+  }
+
+  const ground = create(gl, {
+    program: programs.default,
+    name: 'ground',
+    ...groundGeo,
+    colors: groundColors,
+    plugins: {
+      draw: [
+        () => {
+          if (hbo === undefined) {
+            return;
+          }
+
+          gl.bindBuffer(gl.ARRAY_BUFFER, hbo);
+          gl.vertexAttribPointer(pointer, 1, gl.FLOAT, false, 0, 0);
+          gl.enableVertexAttribArray(pointer);
+        },
+      ],
+    },
+  });
+  scene.push(ground);
 };
 
 window.loop = (dt, canvas) => {

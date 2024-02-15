@@ -1,12 +1,9 @@
 const { vec3, quat, mat4 } = glMatrix;
 
-let _i = 0;
-
 export const create = (gl, {
-  name = "node", program,
-  indices, vertices, uvs,
+  name = "node", program, plugins = {},
+  indices, vertices, uvs, colors,
 }) => {
-  const id = _i++;
   const M = mat4.create();
   const MV = mat4.create();
 
@@ -32,6 +29,17 @@ export const create = (gl, {
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
   }
 
+  let cbo;
+  if (colors) {
+    cbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, cbo);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array(colors),
+      gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+  }
+
   let uvbo;
   if (uvs) {
     uvbo = gl.createBuffer();
@@ -43,6 +51,7 @@ export const create = (gl, {
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
   }
 
+  const { draw = [] } = plugins;
   const node = {
     name, program,
     position: vec3.create(),
@@ -76,6 +85,15 @@ export const create = (gl, {
         gl.vertexAttribPointer(pointer, 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(pointer);
 
+        if (cbo) {
+          const pointer = program.attributes.color;
+          if (pointer !== -1) {
+            gl.bindBuffer(gl.ARRAY_BUFFER, cbo);
+            gl.vertexAttribPointer(pointer, 3, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(pointer);
+          }
+        }
+
         if (uvbo) {
           const pointer = program.attributes.uv;
           if (pointer !== -1) {
@@ -83,6 +101,10 @@ export const create = (gl, {
             gl.vertexAttribPointer(pointer, 2, gl.FLOAT, false, 0, 0);
             gl.enableVertexAttribArray(pointer);
           }
+        }
+
+        for (const drawFn of draw) {
+          drawFn();
         }
 
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);

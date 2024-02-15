@@ -22,6 +22,34 @@ const geo = {
     };
   },
 
+  grid: ({ width = 10, height = 10 } = {}) => {
+    const vertices = [];
+    const indices = [];
+
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        vertices.push(
+          x - width / 2,
+          0,
+          y - height / 2);
+      }
+    }
+
+    for (let x = 0; x < width - 1; x++) {
+      for (let y = 0; y < height - 1; y++) {
+        const i = x * height + y;
+        indices.push(
+          i, i + 1, i + height,
+          i + 1, i + height + 1, i + height);
+      }
+    }
+
+    return {
+      vertices,
+      indices,
+    };
+  },
+
   octohedron: () => {
     return {
       vertices: [

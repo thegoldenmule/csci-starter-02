@@ -1,10 +1,11 @@
 #version 300 es
 precision mediump float;
 
-// Color that is the result of this shader
+in vec3 vColor;
+
 out vec4 fragColor;
 
 void main(void) {
   // Set the result as red
-  fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+  fragColor = vec4(vColor, 1.0);
 }

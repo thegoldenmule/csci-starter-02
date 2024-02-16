@@ -28,18 +28,26 @@ window.init = async (canvas) => {
     //
   });
 
-  const { vertices, indices, } = geo.quad();
+
   const quadNode = create(gl, {
     program: programs.default,
-    rotation: quat.fromEuler(quat.create(), 90, 0, 0),
-    vertices, indices,
+    ...geo.quad(),
   });
   scene.push(quadNode);
 
   // solar system
-  /*
-  const { vertices, indices } = geo.sphere();
+  const { vertices, indices } = geo.sphere(6);
   const colors = new Float32Array(vertices.length);
+  for (let i = 0; i < colors.length; i += 3) {
+    const [vx, vy, vz] = vertices.slice(i, i + 3);
+    const r = vx * 0.5 + 0.5;
+    const g = vy * 0.5 + 0.5;
+    const b = vz * 0.5 + 0.5;
+
+    colors[i] = r;
+    colors[i + 1] = g;
+    colors[i + 2] = b;
+  }
 
   const sun = create(gl, {
     program: programs.default,
@@ -47,7 +55,7 @@ window.init = async (canvas) => {
     vertices, indices, colors,
   });
   sun.acc = 0;
-  //scene.push(sun);
+  scene.push(sun);
 
   sun.update = (dt) => {
     const speed = 0.03;
@@ -59,7 +67,7 @@ window.init = async (canvas) => {
       0, angle, 0);
   };
 
-  const cubeGeo = geo.cube();
+  const cubeGeo = geo.cubeComplex();
   const cube = create(
     gl,
     {
@@ -79,7 +87,7 @@ window.init = async (canvas) => {
     cube.rotation = quat.fromEuler(
       cube.rotation,
       15, angle, 0);
-  };*/
+  };
 };
 
 window.loop = (dt, canvas) => {
